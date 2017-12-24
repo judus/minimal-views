@@ -334,9 +334,42 @@ class View implements ViewInterface
                 ) . $this->getFileExt();
 
         } else {
-            throw new ViewNotFoundException('View '. rtrim(
+            throw new ViewNotFoundException('View ' . rtrim(
                     $this->getViewPath(), $this->getFileExt()
-                ) . $this->getFileExt().' not found');
+                ) . $this->getFileExt() . ' not found');
+        }
+
+        $rendered = ob_get_contents();
+        ob_end_clean();
+
+        return $rendered;
+    }
+
+    /**
+     * @param            $viewPath
+     * @param array|null $data
+     *
+     * @return string
+     * @throws ViewNotFoundException
+     */
+    public function partial($viewPath, array $data = null)
+    {
+        !$data or extract($data);
+        ob_start();
+
+        if (file_exists(rtrim(
+                $this->getPath() . $viewPath, $this->getFileExt()
+            ) . $this->getFileExt())) {
+
+            /** @noinspection PhpIncludeInspection */
+            include rtrim(
+                    $this->getPath() . $viewPath, $this->getFileExt()
+                ) . $this->getFileExt();
+
+        } else {
+            throw new ViewNotFoundException('View ' . rtrim(
+                    $this->getPath() . $viewPath, $this->getFileExt()
+                ) . $this->getFileExt() . ' not found');
         }
 
         $rendered = ob_get_contents();
