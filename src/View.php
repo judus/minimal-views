@@ -25,6 +25,11 @@ class View implements ViewInterface
     /**
      * @var
      */
+    private $fallback;
+
+    /**
+     * @var
+     */
     private $theme;
 
     /**
@@ -137,6 +142,23 @@ class View implements ViewInterface
 		$this->base = empty($base) ? '' : rtrim($base, '/') . '/';
 	}
 
+    /**
+     * @return mixed
+     */
+    public function getFallback()
+    {
+        return $this->fallback;
+    }
+
+    /**
+     * @param mixed $fallback
+     */
+    public function setFallback($fallback)
+    {
+        $this->fallback = empty($fallback) ? '' : rtrim($fallback, '/') . '/';
+    }
+
+
 	/**
 	 * @return mixed
 	 */
@@ -242,12 +264,20 @@ class View implements ViewInterface
     }
 
     /**
-	 * @return string
-	 */
-	public function getPath()
-	{
-		return $this->getBase() . $this->getTheme() . $this->getDir();
-	}
+     * @return string
+     */
+    public function getPath()
+    {
+        return $this->getBase() . $this->getTheme() . $this->getDir();
+    }
+
+    /**
+     * @return string
+     */
+    public function getFallbackPath()
+    {
+        return $this->getFallback() . $this->getTheme() . $this->getDir();
+    }
 
     /**
      * @return string
@@ -260,11 +290,26 @@ class View implements ViewInterface
     /**
      * @return string
      */
+    public function getViewFallbackPath()
+    {
+        return $this->getFallbackPath() . $this->getView() . $this->getFileExt();
+    }
+
+    /**
+     * @return string
+     */
     public function getLayoutPath()
     {
         return $this->getPath() . $this->getLayout() . $this->getFileExt();
     }
 
+    /**
+     * @return string
+     */
+    public function getLayoutFallbackPath()
+    {
+        return $this->getFallbackPath() . $this->getLayout() . $this->getFileExt();
+    }
 
     /**
      * @return bool
@@ -333,6 +378,15 @@ class View implements ViewInterface
                     $this->getViewPath(), $this->getFileExt()
                 ) . $this->getFileExt();
 
+        } elseif (file_exists(rtrim(
+                $this->getViewFallbackPath(), $this->getFileExt()
+            ) . $this->getFileExt())) {
+
+            /** @noinspection PhpIncludeInspection */
+            include rtrim(
+                    $this->getViewFallbackPath(), $this->getFileExt()
+                ) . $this->getFileExt();
+
         } else {
             throw new ViewNotFoundException('View ' . rtrim(
                     $this->getViewPath(), $this->getFileExt()
@@ -366,6 +420,15 @@ class View implements ViewInterface
                     $this->getPath() . $viewPath, $this->getFileExt()
                 ) . $this->getFileExt();
 
+        } elseif (file_exists(rtrim(
+                $this->getFallbackPath() . $viewPath, $this->getFileExt()
+            ) . $this->getFileExt())) {
+
+            /** @noinspection PhpIncludeInspection */
+            include rtrim(
+                    $this->getFallbackPath() . $viewPath, $this->getFileExt()
+                ) . $this->getFileExt();
+
         } else {
             throw new ViewNotFoundException('View ' . rtrim(
                     $this->getPath() . $viewPath, $this->getFileExt()
@@ -389,9 +452,28 @@ class View implements ViewInterface
         ob_start();
 
         /** @noinspection PhpIncludeInspection */
-        include rtrim(
+        if (file_exists(rtrim(
                 $this->getLayoutPath(), $this->getFileExt()
-            ) . $this->getFileExt();
+            ) . $this->getFileExt())) {
+
+            include rtrim(
+                    $this->getLayoutPath(), $this->getFileExt()
+                ) . $this->getFileExt();
+
+        } elseif (file_exists(rtrim(
+                $this->getLayoutFallbackPath(), $this->getFileExt()
+            ) . $this->getFileExt())) {
+
+            include rtrim(
+                    $this->getLayoutFallbackPath(), $this->getFileExt()
+                ) . $this->getFileExt();
+        } else {
+
+            throw new ViewNotFoundException('View ' . rtrim(
+                    $this->getLayoutPath(), $this->getFileExt()
+                ) . $this->getFileExt() . ' not found');
+        }
+
         $rendered = ob_get_contents();
         ob_end_clean();
 
