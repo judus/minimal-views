@@ -83,7 +83,7 @@ class View implements ViewInterface
      */
     public function getDir()
     {
-        return rtrim($this->dir, '/') . '/';
+        return !empty($this->dir) ? rtrim($this->dir, '/') . '/' : '';
     }
 
     /**
